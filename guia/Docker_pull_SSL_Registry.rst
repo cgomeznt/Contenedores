@@ -5,13 +5,13 @@ Como configurar docker para que se pueda conectar a un Registry que tiene SSL.
 
 Si en el registry tiene configurado el SSL, sería más qu suficiente en el servidor que esta realizando la conexión al registry, configurar la CA publica.
 
-Copiar el certificado de la CA en “/etc/pki/ca-trust/source/anchors/”
+Copiar el certificado de la CA en “/etc/pki/ca-trust/source/anchors/”::
 
 	cp /home/cgomez/ca.crt  /etc/pki/ca-trust/source/anchors/ca-2026.crt
 
 
 
-Luego ejecutamos este comando
+Luego ejecutamos este comando::
 
 	update-ca-trust
 
@@ -33,10 +33,12 @@ Es decir, en esta carpeta "/etc/docker/certs.d" creaun un nombre de carpeta con 
 es que se copia el certificado del Registry.
 
 Si aún no tiene el certificado, puede extraerlo usando openssl. Tenga en cuenta que esto confía implícitamente en lo que el registro diga actualmente 
-que es su certificado, lo que lo expone a ataques MitM. Esto puede resultar útil como TOFU (confianza en el primer uso) si no estás en un entorno efímero:
+que es su certificado, lo que lo expone a ataques MitM. Esto puede resultar útil como TOFU (confianza en el primer uso) si no estás en un entorno efímero::
 
-openssl s_client -showcerts -connect my-registry.example.com:5000 < /dev/null \
-  | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'
-  
-openssl s_client -showcerts -connect 10.133.0.236:4443 < /dev/null \
-  | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > registry.crt
+	openssl s_client -showcerts -connect my-registry.example.com:5000 < /dev/null \
+	  | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'
+
+Este es otro ejemplo::
+	  
+	openssl s_client -showcerts -connect 10.133.0.236:4443 < /dev/null \
+	  | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > registry.crt
