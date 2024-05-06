@@ -1,5 +1,6 @@
+
 Building a Docker in Docker image with Gitlab
-=======================================
+==================================================
 
 Vamos a utilizar la tecnica del Multi-Stage, ver link oficial::
 
