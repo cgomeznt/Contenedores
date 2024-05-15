@@ -26,6 +26,7 @@
 * [Docker paso a paso para CONSIS con WAS](guia/Docker_paso_paso_CONSIS_WAS.rst)
 * [Un buen build run exec para CONSIS](guia/build-run-exec.rst)
 * [Multi-Stage con Gitlab](guia/Multi-Stage_with_Gitlab.rst)
+* [Configurar el kernel para los ulimits](guia/ulimits.rst)
 
 
 
