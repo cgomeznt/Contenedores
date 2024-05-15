@@ -1,0 +1,85 @@
+version: '3'
+services:
+  api:
+    container_name: bank-gateway
+    image: credicard-paguetodo-bank-gateway-prod:latest
+    command:  java -jar -Xms512m -Xmx2048m -XX:+UseAdaptiveSizePolicy cuyawa-bank-gateway.jar server config.yml true
+    restart: always
+    network_mode: "host"
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "42038:42038"
+    volumes:
+      - /apit/bank-gateway/:/usr/app/log/
+      - /etc/localtime:/etc/localtime:ro
+      - /MQ/identipago/0138/entrada/:/MQ/identipago/0138/entrada/
+      - /MQ/paguetodo/0138/salida/:/MQ/paguetodo/0138/salida/
+      - /MQ/chinchin/0138/salida/:/MQ/chinchin/0138/salida/
+      - /MQ/identipago/0138/salida/:/MQ/identipago/0138/salida/
+      - /MQ/chinchin/0138/entrada/:/MQ/chinchin/0138/entrada/
+      - /MQ/paguetodo/0138/entrada/:/MQ/paguetodo/0138/entrada/
+
+  jpos:
+    container_name: jpos
+    image: credicard-paguetodo-jpos-prod:latest
+    command:  java -jar -Xmx1024M -Xms1024M -XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:+UseCMSInitiatingOccupancyOnly -XX:+CMSClassUnloadingEnabled -XX:+CMSScavengeBeforeRemark -XX:+AggressiveOpts -XX:+ParallelRefProcEnabled -XX:+TieredCompilation CredicardServer.jar
+    restart: always
+    network_mode: "host"
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "7012:7012"
+      - "7014:7014"
+    volumes:
+      - /apit/jpos/:/usr/app/log/
+      - /apit/ccrpagos:/usr/app/ccrpagos/
+      - /etc/localtime:/etc/localtime:ro
+
+  api-merchant:
+    container_name: merchant
+    image: credicard-paguetodo-merchant-prod:latest
+    command:  java -jar -Xms512m -Xmx2048m -verbose:gc -XX:+UseAdaptiveSizePolicy  cuyawa-merchant.jar server config.yml true
+    restart: always
+    network_mode: "host"
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+      - "lcsprdappapitran1:127.0.0.1"
+    ports:
+      - "42039:42039"
+    volumes:
+      - /apit/merchant/:/usr/app/log/
+
+  jpos-merchant:
+    container_name: jpos-merchant
+    image: credicard-paguetodo-jpos-merchant-prod:latest
+    restart: always
+    network_mode: "host"
+    command:  java -jar -Xms512m -Xmx2048m -XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:+UseCMSInitiatingOccupancyOnly -XX:+CMSClassUnloadingEnabled -XX:+CMSScavengeBeforeRemark -XX:+AggressiveOpts -XX:+ParallelRefProcEnabled -XX:+TieredCompilation -verbose:gc -XX:+UseAdaptiveSizePolicy MerchantServer.jar
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "7031:7018"
+      - "7033:7020"
+    volumes:
+      - /apit/jpos-merchant/:/usr/app/log/
+      - /apit/ccrpagos:/usr/app/ccrpagos/
+
+  bio-nfc-jpos:
+    container_name: bio-nfc-jpos
+    image: bio-nfc-jpos-prod:latest
+    restart: always
+    network_mode: "host"
+    #command: java --add-exports=java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports=java.base/sun.security.x509=ALL-UNNAMED --add-exports=java.base/sun.security.pkcs=ALL-UNNAMED  -jar deegle-iso-bionfc.jar  
+    command:  java -jar -Xms512m -Xmx2048m -XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses -XX:+UseConcMarkSweepGC -XX:+CMSIncrementalMode -XX:+UseCMSInitiatingOccupancyOnly -XX:+CMSClassUnloadingEnabled -XX:+CMSScavengeBeforeRemark -XX:+AggressiveOpts -XX:+ParallelRefProcEnabled -XX:+TieredCompilation -verbose:gc -XX:+UseAdaptiveSizePolicy deegle-iso-bionfc.jar
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "7040:7040"
+    volumes:
+      - /apit/bio-nfc-jpos/:/usr/app/log/
+      - /apit/ccrpagos:/usr/app/ccrpagos/
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
+
+

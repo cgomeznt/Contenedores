@@ -1,0 +1,84 @@
+version: '3'
+services:
+  gateway:
+    container_name: gateway-prod-crd-pt
+    image: gateway-prod-crd-pt:latest
+    restart: always
+    network_mode: "bridge"
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "8000:8082"
+    volumes:
+      - /apim/gateway:/opt/graviteeio-gateway/logs
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
+
+  api:
+    container_name: api-prod-crd-pt
+    image: api-prod-crd-pt:latest
+    restart: always
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "8005:8083"
+    volumes:
+      - /apim/api:/opt/graviteeio-management-api/logs
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
+
+  ui:
+    container_name: ui-prod-crd-pt
+    image: ui-prod-crd-pt:latest
+    restart: always
+    read_only: false
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "8002:8080"
+    volumes:
+      - /apim/ui/nginx/cache:/var/cache/nginx
+      - /apim/ui/nginx/run:/var/run
+      - /apim/ui/nginx/log:/var/log/nginx
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
+
+  portal_ui:
+    image: portal-ui-prod-crd-pt:latest
+    container_name: portal-ui-prod-crd-pt
+    restart: always
+    # read_only: true
+    depends_on:
+      - api
+    ports:
+      - "8003:8080"
+    volumes:
+      - /apim/portal_ui/nginx/cache:/var/cache/nginx
+      - /apim/portal_ui/nginx/run:/var/run
+      - /apim/portal_ui/nginx/log:/var/log/nginx
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
+
+  app:
+    container_name: app-proxy-prod-crd-pt
+    image: app-proxy-prod-crd-pt:latest
+    restart: always
+    read_only: true
+    network_mode: "bridge"
+    ports:
+      - "80:80"
+      - "443:443"
+    ulimits:
+      nproc: 102400
+      nofile:
+        soft: 102400
+        hard: 102400
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /apps/nginx/cache:/var/cache/nginx
+      - /apps/nginx/run:/var/run
+      - /apps/nginx/log:/var/log/nginx
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas

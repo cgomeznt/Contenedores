@@ -1,0 +1,22 @@
+version: '3'
+services:
+  api:
+    container_name: credicard-paguetodo-prod
+    image: credicard-paguetodo:latest
+    command:  java -Xms2048m -Xmx2048m -Doracle.jdbc.timezoneAsRegion=false -Djava.awt.headless=true -Dcom.ibm.as400.access.AS400.guiAvailable=false -Dhttp.proxyHost=10.132.0.10 -Dhttp.proxyPort=8080 -Dhttps.proxyHost=10.132.0.10 -Dhttps.proxyPort=8080 -jar credicard-paguetodo.jar server config.yml prod true
+    # command:  java -Djava.awt.headless=true -Dcom.ibm.as400.access.AS400.guiAvailable=false -jar credicard-paguetodo.jar server config.yml prod true
+    restart: always
+    network_mode: "host"
+    extra_hosts:
+      - "api.credicard.com.ve:10.133.0.142"
+    ports:
+      - "29436:29436"
+      - "8443:8443"
+      - "8440:8440"
+    volumes:
+      - /apisis/log:/usr/app/log/
+      - /apisis/Entrada/:/usr/app/affiliations/
+      - ./conf:/usr/app/config/prod/
+      - ./pinpad-aid:/usr/app/static
+    environment:
+      - DOCKER_TIMEZONE=America/Caracas
