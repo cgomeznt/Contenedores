@@ -18,6 +18,7 @@
 * [Docker Compose](guia/docker-compose.rst)
 * [Deploy a Registry Server](guia/DeployRegistryServer.rst)
 * [Docker Insecure Registry](guia/Docker_insecure_registry.rst)
+* [Docker Registry Depurar_imagenes_en_el_Registry ](guia/Depurar_imagenes_en_el_Registry.rst)
 * [Docker_pull_SSL_Registry.rst](guia/Docker_pull_SSL_Registry.rst)
 * [Step-step con Dockerfile CONSIS](guia/Step_step_con_Dockerfile.rst)
 * [Step-step con Dockerfile para Weblogic CONSIS](guia/Step_step_con_Dockerfile_para_Weblogic.rst)
