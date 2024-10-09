@@ -42,3 +42,11 @@ Este es otro ejemplo::
 	  
 	openssl s_client -showcerts -connect 10.133.0.236:4443 < /dev/null \
 	  | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > registry.crt
+
+Si estamos conectandonos desde un cluster Kubernetes, debemos en cada uno de los master y de los worker::
+
+	vi /etc/docker/daemon.json
+	
+	{
+	  "insecure-registries" : ["docker-registry-machine-name:4443","docker-registry-machine-name:80","0.0.0.0/0"]
+	}
