@@ -24,6 +24,123 @@ Remove the locally-cached ubuntu:16.04 and localhost:5000/my-ubuntu images, so t
 	$ docker image remove ubuntu:16.04
 	$ docker image remove localhost:5000/my-ubuntu
 
+Crear un Registry con SSL
+------------------------------
+
+Construimos el directorio de trabajo::
+
+	mkdir /certs && cd /certs
+
+Creamos el archivo ssl.conf::
+
+	echo "# Self Signed (note the addition of -x509):
+	#     openssl req -config example-com.conf -new -x509 -sha256 -newkey rsa:2048 -nodes -keyout example-com.key.pem -days 365 -out example-com.cert.pem
+	# Signing Request (note the lack of -x509):
+	#     openssl req -config example-com.conf -new -newkey rsa:2048 -nodes -keyout example-com.key.pem -days 365 -out example-com.req.pem
+	# Print it:
+	#     openssl x509 -in example-com.cert.pem -text -noout
+	#     openssl req -in example-com.req.pem -text -noout
+	
+	[ req ]
+	default_bits        = 4096
+	default_keyfile     = server-key.pem
+	distinguished_name  = subject
+	req_extensions      = req_ext
+	x509_extensions     = x509_ext
+	string_mask         = utf8only
+	# The Subject DN can be formed using X501 or RFC 4514 (see RFC 4519 for a description).
+	#   Its sort of a mashup. For example, RFC 4514 does not provide emailAddress.
+	[ subject ]
+	countryName         = VE
+	countryName_default = VE
+	stateOrProvinceName = DC
+	stateOrProvinceName_default = CCS
+	organizationUnit    = CCR
+	organizationUnit_default    = TEC
+	
+	localityName        = CCS
+	localityName_default = CCS
+	
+	organizationName     = CCR
+	organizationName_default  = CCR
+	
+	# Use a friendly name here because its presented to the user. The server's DNS
+	#   names are placed in Subject Alternate Names. Plus, DNS names here is deprecated
+	#   by both IETF and CA/Browser Forums. If you place a DNS name here, then you
+	#   must include the DNS name in the SAN too (otherwise, Chrome and others that
+	#   strictly follow the CA/Browser Baseline Requirements will fail).
+	commonName         = Registry
+	commonName_default = Registry
+	
+	emailAddress       = info@credicard.com.ve
+	emailAddress_default  = info@credicard.com.ve
+	
+	# Section x509_ext is used when generating a self-signed certificate. I.e., openssl req -x509 ...
+	#  If RSA Key Transport bothers you, then remove keyEncipherment. TLS 1.3 is removing RSA
+	#  Key Transport in favor of exchanges with Forward Secrecy, like DHE and ECDHE.
+	[ x509_ext ]
+	
+	subjectKeyIdentifier    = hash
+	authorityKeyIdentifier  = keyid,issuer
+	
+	basicConstraints        = CA:FALSE
+	keyUsage            = digitalSignature, keyEncipherment
+	subjectAltName      = IP:10.134.4.250
+	nsComment           = "OpenSSL Generated Certificate"
+	
+	# RFC 5280, Section 4.2.1.12 makes EKU optional
+	# CA/Browser Baseline Requirements, Appendix (B)(3)(G) makes me confused
+	# extendedKeyUsage  = serverAuth, clientAuth
+	
+	# Section req_ext is used when generating a certificate signing request. I.e., openssl req ...
+	[ req_ext ]
+	
+	subjectKeyIdentifier    = hash
+	
+	basicConstraints    = CA:FALSE
+	keyUsage            = digitalSignature, keyEncipherment
+	subjectAltName      = IP:10.134.4.250
+	nsComment           = "OpenSSL Generated Certificate"
+	
+	# RFC 5280, Section 4.2.1.12 makes EKU optional
+	# CA/Browser Baseline Requirements, Appendix (B)(3)(G) makes me confused
+	# extendedKeyUsage  = serverAuth, clientAuth
+	
+	[ alternate_names ]
+	
+	DNS.1       = example.com
+	DNS.2       = www.example.com
+	DNS.3       = mail.example.com
+	DNS.4       = ftp.example.com" > ssl.conf
+
+Creamos el certificado autofirmado::
+
+	openssl req -newkey rsa:4096 -nodes -sha256  -keyout domain.key  -x509 -days 10000 -out domain.crt  -config ssl.conf
+
+Listamos los archivos::
+
+	ls -ltr
+	total 12
+	-rw-r----- 1 root root 3028 Apr 23 10:39 ssl.conf
+	-rw------- 1 root root 3272 Apr 23 10:41 domain.key
+	-rw-r----- 1 root root 2110 Apr 23 10:41 domain.crt
+
+Preparamos el directorio para que el Registry sea accesible desde su mismo host::
+
+	mkdir -p /etc/docker/certs.d/10.134.4.250:4443
+
+	cp domain.crt /etc/docker/certs.d/10.134.4.250:4443/ca.crt
+
+Culminamos haciendo la descarga de una imagen y haciendo el push dentro del Registry::
+
+	docker pull alpine
+
+	docker tag alpine:latest 10.134.4.250:4443/alpine
+
+	docker images
+
+	docker push 10.134.4.250:4443/alpine
+
 Correr un Registry accesible desde otros servidores
 +++++++++++++++++++++++++++++++++++++
 
