@@ -131,6 +131,24 @@ Preparamos el directorio para que el Registry sea accesible desde su mismo host:
 
 	cp domain.crt /etc/docker/certs.d/10.134.4.250:4443/ca.crt
 
+Iniciamos el contenedor del Registry::
+
+	docker run -d \
+	--restart=always \
+	--name registry.dominio.local \
+	-v /certs:/certs \
+	-e REGISTRY_HTTP_ADDR=0.0.0.0:4443 \
+	-e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+	-e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+	-p 4443:4443 \
+	registry:2
+
+
+Vemos que imágenes tiene el Registry::
+
+	curl -k https://10.134.4.250:4443/v2/_catalog
+
+
 Culminamos haciendo la descarga de una imagen y haciendo el push dentro del Registry::
 
 	docker pull alpine
@@ -140,6 +158,14 @@ Culminamos haciendo la descarga de una imagen y haciendo el push dentro del Regi
 	docker images
 
 	docker push 10.134.4.250:4443/alpine
+
+
+Volvemos a verificar que imágenes tiene el Registry::
+
+	curl -k https://10.134.4.250:4443/v2/_catalog
+
+Listo ...!!!
+
 
 Correr un Registry accesible desde otros servidores
 +++++++++++++++++++++++++++++++++++++
@@ -170,48 +196,6 @@ Y dentro de esa carpeta debemos copiar el certificado del servidor y la CA que l
 
 **NOTA** Si omites los pasos anteriores te encontraras con este error <Get https://registry.dominio.local:4443/v2/: x509: certificate signed by unknown authority
 >
-Se instancia el contenedor de Registry, debemos estar un peldaño sobre la carpeta certs, donde están los certificados::
-
-	docker run -d \
-	  --restart=always \
-	  --name registry.dominio.local \
-	  -v "$(pwd)"/certs:/certs \
-	  -e REGISTRY_HTTP_ADDR=0.0.0.0:4443 \
-	  -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt \
-	  -e REGISTRY_HTTP_TLS_KEY=/certs/registry.key \
-	  -p 4443:4443 \
-	  --network app \
-	  registry:2
-
-Consultamos que IP tiene::
-
-	docker container inspect registry.dominio.local | grep IPAddress
-
-La IP que nos arroje se la cargamos a nuestro archivo HOST en donde esta corriendo el contenedor::
-
-	echo "172.18.0.3	registry.dominio.local" >> /etc/hosts
-
-Probamos desde el HOST el ping::
-
-	ping -c2 registry.dominio.local
-
-Vemos que imágenes tiene el Registry::
-
-	curl -k https://registry.dominio.local:4443/v2/_catalog
 
 
-descargamos una imagen de prueba::
 
-	docker pull alpine
-
-	docker tag alpine:latest registry.dominio.local:4443/alpine
-
-	docker images
-
-	docker push registry.dominio.local:4443/alpine
-
-Volvemos a verificar que imágenes tiene el Registry::
-
-	curl -k https://registry.dominio.local:4443/v2/_catalog
-
-Listo ...!!!
